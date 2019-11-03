@@ -1,28 +1,12 @@
-/* 
-  Stoboscopee generator with analog control and LCD
-  Kubov V.I. 2012
-  Digital outputs: 
-   Control LED output: digital pin 13, Gnd
-   Main LED output : digital pin 9, Gnd
-   The LCD circuit:
-   * LCD RS pin to digital pin 7
-   * LCD En pin to digital pin 6
-   * LCD D4 pin to digital pin 5
-   * LCD D5 pin to digital pin 4
-   * LCD D6 pin to digital pin 3
-   * LCD D7 pin to digital pin 2
-   * LCD VO pin to Ground
-   * Gnd.
-  Frequencie control: Variable Resistor 1K - 100K.
-   * Vcc;
-   * AnalogIn_0 - VR middle point; 
-   * Gnd.
-*/
+#include "ESP8266WiFi.h"
+#include "ESP8266WebServer.h"
+
+ESP8266WebServer server(80);
 
 #define _cLEDpin 5
 #define _mLEDpin 2
 
-#define _cDuty 16
+#define _cDuty 50
 #define _minFreq 10 //*0.1Hz
 #define _maxFreq  1200 //*0.1Hz
 #define _maxOn 1000 // *0.1ms
@@ -32,53 +16,103 @@ unsigned int count=0;
 unsigned int cPeriod=200; //*0.1ms
 unsigned int cOn=cPeriod/_cDuty; 
 
+int strobeFreq = 1;
+
+
+/*
+* Change the state of the LED
+*/
 void ICACHE_RAM_ATTR onTimerISR(){ // -------- Interupt routine ----------------
   if (count==0){ 
     digitalWrite(_cLEDpin,HIGH); //LED On 
     digitalWrite(_mLEDpin,HIGH); //LED On 
-  }//  
-  if (count>=cOn){ // 
+  }
+  if (count>=cOn){ 
     digitalWrite(_cLEDpin,LOW); //LED Off 
     digitalWrite(_mLEDpin,LOW); //LED Off 
-  }//
+  }
   count++;
   if (count>=cPeriod) count=0;
-}//ISR 
+}
 
+/*
+* Set interrupt timer for ESP8266
+*/
 void setTimer2(){ 
-      timer1_isr_init();      
-      timer1_attachInterrupt(onTimerISR);
-      timer1_enable(TIM_DIV16, TIM_EDGE, TIM_LOOP);
-      timer1_write(500);
+  timer1_isr_init();      
+  timer1_attachInterrupt(onTimerISR);
+  timer1_enable(TIM_DIV16, TIM_EDGE, TIM_LOOP);
+  timer1_write(500);
       // Fout = (80mHz / 16) / 500 = 10kHz
-}// setTimer2 
-  
+}
 
+/**
+* Arduino Setup function.
+*/
 void setup(){
   pinMode(_cLEDpin,OUTPUT);
   pinMode(_mLEDpin,OUTPUT);
   digitalWrite(_cLEDpin,LOW); //LED Off 
   digitalWrite(_mLEDpin,LOW); //LED Off 
-
-  setTimer2();
+  Serial.begin(115200);
   
-  // set up the LCD's number of rows and columns: 
+  WiFi.softAP("StrobeLight", "");
+  
+   server.on("/", mainHTML);
+   server.on("/ctl", timeControl); 
+   server.begin();
 
-}//setup  
+   setTimer2();
+}
 
-#define _aMin 0  
-#define _aMax 1023  
 
-void loop(){
-  // ----------  Check analog control and set Frequencie -------
-  int aS = 2; 
-  int Freq10=map(aS,_aMin,_aMax,_minFreq,_maxFreq);
-  unsigned int Period=100000/Freq10; //*0.1ms 
+/**
+* Default Arduino Function
+*/
+void loop(){   
+  server.handleClient(); 
+  delay(_Pause);  
+}
+
+/**
+* HTML web skeleton
+*
+* @return web page string
+*/
+String formHTML(){
+
+  String form =""
+  "<html>\n"
+  "<head>\n"
+  "<form action='ctl' method='get'>\n"
+  "Enter your Strobe Frequency here: <input type='text' name='freq' value='"+server.arg("freq")+"'>\n"
+  "<input type='submit' value='Set Frequency'>\n"
+  "</form>\n"
+  "</body>\n"
+  "</html>";
+  return (form);
+}
+
+/**
+* Displays the start page
+*/
+void mainHTML(){ 
+ server.send(200,"text/html",formHTML());
+}
+
+/**
+ * Control led blinking frequency.
+ */
+void timeControl(){
+   strobeFreq = server.arg("freq").toInt();
+   Serial.println(strobeFreq);
+   strobeFreq *= 10;
+   
+
+  unsigned int Period=100000/strobeFreq; //*0.1ms 
   unsigned int On=Period/_cDuty; //*0.1ms  
   if (On<_maxOn) cOn=On; else cOn=_maxOn;
   cPeriod=Period;
   
-  // ---------------- LCD --------------------
-    
-  delay(_Pause);  
-}//loop  
+  server.send(200,"text/html",formHTML());
+}
