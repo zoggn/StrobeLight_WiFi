@@ -1,6 +1,7 @@
 #include "ESP8266WiFi.h"
 #include "ESP8266WebServer.h"
 
+
 ESP8266WebServer server(80);
 
 #define _cLEDpin 5
@@ -17,7 +18,6 @@ unsigned int cPeriod=200; //*0.1ms
 unsigned int cOn=cPeriod/_cDuty; 
 
 int strobeFreq = 1;
-
 
 /*
 * Change the state of the LED
@@ -65,7 +65,6 @@ void setup(){
    setTimer2();
 }
 
-
 /**
 * Default Arduino Function
 */
@@ -74,24 +73,8 @@ void loop(){
   delay(_Pause);  
 }
 
-/**
-* HTML web skeleton
-*
-* @return web page string
-*/
-String formHTML(){
-
-  String form =""
-  "<html>\n"
-  "<head>\n"
-  "<form action='ctl' method='get'>\n"
-  "Enter your Strobe Frequency here: <input type='text' name='freq' value='"+server.arg("freq")+"'>\n"
-  "<input type='submit' value='Set Frequency'>\n"
-  "</form>\n"
-  "</body>\n"
-  "</html>";
-  return (form);
-}
+// Include web page header
+#include "src/web_page.h"
 
 /**
 * Displays the start page
