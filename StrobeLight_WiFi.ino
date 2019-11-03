@@ -57,6 +57,14 @@ void setup(){
   Serial.begin(115200);
   
   WiFi.softAP("StrobeLight", "");
+
+  Serial.println("Waiting for connection");
+  while(WiFi.softAPgetStationNum() < 1){
+    Serial.print(".");
+    delay(100);
+  }
+  Serial.println();
+  Serial.println("User connected successfully");
   
    server.on("/", mainHTML);
    server.on("/ctl", timeControl); 
