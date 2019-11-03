@@ -17,7 +17,7 @@ unsigned int count=0;
 unsigned int cPeriod=200; //*0.1ms
 unsigned int cOn=cPeriod/_cDuty; 
 
-int strobeFreq = 1;
+double strobeFreq = 1;
 
 /*
 * Change the state of the LED
@@ -95,7 +95,7 @@ void mainHTML(){
  * Control led blinking frequency.
  */
 void timeControl(){
-   strobeFreq = server.arg("freq").toInt();
+   strobeFreq = server.arg("freq").toDouble();
    Serial.print("LOG[timeControl] Strobe Frequency == ");Serial.print(strobeFreq); Serial.println();
    strobeFreq *= 10;
    
