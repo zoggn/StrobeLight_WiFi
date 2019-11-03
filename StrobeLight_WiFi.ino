@@ -87,7 +87,7 @@ void loop(){
 /**
 * Displays the start page
 */
-void mainHTML(){ 
+void mainHTML(){
  server.send(200,"text/html",formHTML());
 }
 
@@ -96,7 +96,7 @@ void mainHTML(){
  */
 void timeControl(){
    strobeFreq = server.arg("freq").toInt();
-   Serial.println(strobeFreq);
+   Serial.print("LOG[timeControl] Strobe Frequency == ");Serial.print(strobeFreq); Serial.println();
    strobeFreq *= 10;
    
 
@@ -104,6 +104,6 @@ void timeControl(){
   unsigned int On=Period/_cDuty; //*0.1ms  
   if (On<_maxOn) cOn=On; else cOn=_maxOn;
   cPeriod=Period;
-  
+
   server.send(200,"text/html",formHTML());
 }
