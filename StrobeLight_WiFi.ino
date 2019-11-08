@@ -13,9 +13,9 @@ ESP8266WebServer server(80);
 #define _maxOn 1000 // *0.1ms
 #define _Pause 100 //ms
 
-unsigned int count=0;
-unsigned int cPeriod=200; //*0.1ms
-unsigned int cOn=cPeriod/_cDuty; 
+volatile unsigned int count=0;
+volatile unsigned int cPeriod=200; //*0.1ms
+volatile unsigned int cOn=cPeriod/_cDuty; 
 
 double strobeFreq = 1;
 
